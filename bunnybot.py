@@ -10,8 +10,8 @@ the bot will run on. The names of these variables can be found (or modified) und
 import discord
 import os
 import logging
-import schedule
-import time
+from discord.ext import tasks
+import datetime
 
 # ---- SETUP ---- 
 # Sends logs to a file: 'discord.log'
@@ -27,21 +27,28 @@ intents = discord.Intents.default()
 # Initialize client
 client = discord.Client(intents=intents)
 
+# Time to send the daily message
+daily_message_time = datetime.time(hour=22, minute=45, second=0) 
+
 
 # ---- EVENTS AND FUNCTIONS ----
 @client.event
 async def on_ready() -> None:
     print(f'Logged in as {client.user}')
 
-    # Send daily message at set time
-    schedule.every().day.at("16:00").do(daily_message(client))
+    if not daily_message.is_running():
+        daily_message.start() #If the task is not already running, start it.
+        print(f"Daily message function ran {datetime.date.now()}")
 
 
+@tasks.loop(time=daily_message_time) 
 async def daily_message(client) -> None:
     channel = client.get_channel(channel_id)
 
     if channel:
-        await channel.send('Hello')
+        message = await channel.send('Hello')
+        message_id = message.id
+        print(f'Daily message sent at {datetime.datetime.now()}')
     else:
         print('Channel not found')
 
