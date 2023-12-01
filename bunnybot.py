@@ -4,7 +4,8 @@ At midnight, the reactions are tallied up and saved to a file. Using this data, 
 visualisations with Altair which users can retrieve with a command. 
 
 In order to set up the bot in your server you will have to set environmental variables in the environment
-the bot will run on. The names of these variables can be found (or modified) under the section 'SETUP'. 
+the bot will run on. The names of these variables can be found (or modified) under the section 'SETUP'.
+The default timezone is set to CET, you should adjust accordingly to your timezone. 
 """
 
 import discord
@@ -19,7 +20,7 @@ handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w'
 
 # Server/app specific environmental variables
 token = os.getenv('DISCORD_BOT_TOKEN')
-channel_id = os.getenv('CHANNEL_ID')
+channel_id = int(os.getenv('CHANNEL_ID'))
 
 # Permissions for the bot
 intents = discord.Intents.default()
@@ -27,8 +28,11 @@ intents = discord.Intents.default()
 # Initialize client
 client = discord.Client(intents=intents)
 
+# Set timezone to CET !!(Adjust to your timezone)!!
+cet = datetime.timezone(datetime.timedelta(hours=1))
+
 # Time to send the daily message
-daily_message_time = datetime.time(hour=22, minute=45, second=0) 
+daily_message_time = datetime.time(hour=16, minute=0, second=0, tzinfo=cet) 
 
 
 # ---- EVENTS AND FUNCTIONS ----
@@ -36,13 +40,12 @@ daily_message_time = datetime.time(hour=22, minute=45, second=0)
 async def on_ready() -> None:
     print(f'Logged in as {client.user}')
 
-    if not daily_message.is_running():
-        daily_message.start() #If the task is not already running, start it.
-        print(f"Daily message function ran {datetime.date.now()}")
+    daily_message.start()
+    print(f"Daily message function ran {datetime.date.now()}")
 
 
 @tasks.loop(time=daily_message_time) 
-async def daily_message(client) -> None:
+async def daily_message() -> None:
     channel = client.get_channel(channel_id)
 
     if channel:
